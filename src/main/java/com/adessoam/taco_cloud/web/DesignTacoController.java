@@ -1,10 +1,13 @@
 package com.adessoam.taco_cloud.web;
 
 import com.adessoam.taco_cloud.Ingredient;
+import com.adessoam.taco_cloud.Taco;
+import com.adessoam.taco_cloud.TacoOrder;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.ModelAttribute;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.SessionAttributes;
 
@@ -14,6 +17,8 @@ import java.util.stream.Collectors;
 
 import com.adessoam.taco_cloud.Ingredient.Type;
 
+import javax.validation.Valid;
+
 @Slf4j
 @Controller
 @RequestMapping("/design")
@@ -22,7 +27,6 @@ public class DesignTacoController {
 
     @ModelAttribute
     public void addIngredientsToModel(Model model) {
-
         List<Ingredient> ingredients = Arrays.asList(
                 new Ingredient("FLTO", "Flour Tortilla", Type.WRAP),
                 new Ingredient("COTO", "Corn Tortilla", Type.WRAP),
@@ -40,8 +44,25 @@ public class DesignTacoController {
              ) {
             model.addAttribute(type.toString().toLowerCase(), filterByType(ingredients, type));
         }
+    }
+    @ModelAttribute(name = " tacoOrder")
+    public TacoOrder order(){
+        return new TacoOrder();
+    }
 
+    // will be taken Taco from design.html,
+    // because in design.html didn't give other controller (action) in div <h1> Design your taco! <h1>
+    // orginal controller
+    @ModelAttribute
+    public String showDesignForm(){
+        return  "design";
+    }
 
+    @PostMapping
+    public String processTaco(@Valid Taco taco, @ModelAttribute TacoOrder tacoOrder){
+        tacoOrder.addTaco(taco);
+        log.info("Processing taco: ", taco);
+        return "redirect:/orders/current";
     }
 
     private Iterable<Ingredient> filterByType(List<Ingredient> ingredients, Type type) {
@@ -50,6 +71,4 @@ public class DesignTacoController {
                 .filter(x -> x.getType().equals(type))
                 .collect(Collectors.toList());
     }
-
-
 }
